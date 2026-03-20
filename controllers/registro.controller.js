@@ -1,7 +1,15 @@
 const pool = require('../models/conexion');
 
 const registrarEquipo = async (req, res) => {
-    const { capitan, jugadores } = req.body;
+    // Cuando enviamos FormData, los objetos suelen venir como strings JSON
+    const capitan = typeof req.body.capitan === 'string' ? JSON.parse(req.body.capitan) : req.body.capitan;
+    const jugadores = typeof req.body.jugadores === 'string' ? JSON.parse(req.body.jugadores) : req.body.jugadores;
+    
+    let logo = capitan.logo;
+    if (req.file) {
+        logo = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
     const connection = await pool.getConnection();
 
     try {
@@ -10,7 +18,7 @@ const registrarEquipo = async (req, res) => {
         // 1. Insertar el equipo
         const [equipoResult] = await connection.query(
             'INSERT INTO equipos (nombre, logo) VALUES (?, ?)',
-            [capitan.equipo, capitan.logo || null]
+            [capitan.equipo, logo || null]
         );
         const equipoId = equipoResult.insertId;
 

@@ -34,4 +34,36 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { login };
+const updateClave = async (req, res) => {
+    const { id } = req.params;
+    const { claveActual, nuevaClave } = req.body;
+
+    try {
+        // Verificar clave actual
+        const [rows] = await pool.query(
+            'SELECT clave FROM capitanes WHERE id = ?',
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Capitán no encontrado' });
+        }
+
+        if (rows[0].clave !== claveActual) {
+            return res.status(401).json({ success: false, message: 'La contraseña actual es incorrecta' });
+        }
+
+        // Actualizar clave
+        await pool.query(
+            'UPDATE capitanes SET clave = ? WHERE id = ?',
+            [nuevaClave, id]
+        );
+
+        res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Error al actualizar la contraseña' });
+    }
+};
+
+module.exports = { login, updateClave };
