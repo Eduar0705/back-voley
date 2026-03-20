@@ -66,4 +66,85 @@ const updateClave = async (req, res) => {
     }
 };
 
-module.exports = { login, updateClave };
+const adminLogin = async (req, res) => {
+    const { usuario, clave } = req.body;
+
+    try {
+        const [rows] = await pool.query(
+            'SELECT * FROM administradores WHERE usuario = ? AND clave = ?', 
+            [usuario, clave]
+        );
+
+        if (rows.length > 0) {
+            const admin = rows[0];
+            res.json({
+                success: true,
+                message: 'Login de administrador exitoso',
+                user: {
+                    id: admin.id,
+                    usuario: admin.usuario,
+                    role: 'admin'
+                }
+            });
+        } else {
+            res.status(401).json({
+                success: false,
+                message: 'Usuario o clave de administrador incorrecta'
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error en el servidor' });
+    }
+};
+
+const getAdmins = async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT id, usuario FROM administradores');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener administradores' });
+    }
+};
+
+const createAdmin = async (req, res) => {
+    const { usuario, clave } = req.body;
+    try {
+        await pool.query('INSERT INTO administradores (usuario, clave) VALUES (?, ?)', [usuario, clave]);
+        res.json({ success: true, message: 'Administrador creado correctamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al crear administrador' });
+    }
+};
+
+const updateAdmin = async (req, res) => {
+    const { id } = req.params;
+    const { usuario, clave } = req.body;
+    try {
+        if (clave) {
+            await pool.query('UPDATE administradores SET usuario = ?, clave = ? WHERE id = ?', [usuario, clave, id]);
+        } else {
+            await pool.query('UPDATE administradores SET usuario = ? WHERE id = ?', [usuario, id]);
+        }
+        res.json({ success: true, message: 'Administrador actualizado correctamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al actualizar administrador' });
+    }
+};
+
+const deleteAdmin = async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Evitar que un admin se borre a sí mismo si es el único? No, el usuario no pidió eso.
+        await pool.query('DELETE FROM administradores WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Administrador eliminado correctamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al eliminar administrador' });
+    }
+};
+
+module.exports = { login, updateClave, adminLogin, getAdmins, createAdmin, updateAdmin, deleteAdmin };

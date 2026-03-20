@@ -6,36 +6,27 @@ const getStandings = async (req, res) => {
         const [matches] = await pool.query('SELECT * FROM partidos WHERE status = "finished"');
 
         const standings = teams.map(team => {
-            let pj = 0;
-            let pg = 0;
-            let puntos = 0;
+            let pj = 0, pg = 0, pe = 0, pp = 0, pts = 0;
 
             matches.forEach(match => {
-                if (match.equipoA_id === team.id || match.equipoB_id === team.id) {
+                const isA = match.equipoA_id === team.id;
+                const isB = match.equipoB_id === team.id;
+
+                if (isA || isB) {
                     pj++;
-                    const isWinner = (match.equipoA_id === team.id && match.scoreA > match.scoreB) ||
-                                     (match.equipoB_id === team.id && match.scoreB > match.scoreA);
-                    if (isWinner) pg++;
+                    const scoreMe = isA ? match.scoreA : match.scoreB;
+                    const scoreOp = isA ? match.scoreB : match.scoreA;
+
+                    if (scoreMe > scoreOp) { pg++; pts += 5; }
+                    else if (scoreMe === scoreOp) { pe++; pts += 3; }
+                    else { pp++; pts += 2; }
                 }
             });
 
-            puntos = pg * 3; // 3 puntos por victoria
-
-            return {
-                id: team.id,
-                nombre: team.nombre,
-                logo: team.logo,
-                pj,
-                pg,
-                puntos
-            };
+            return { id: team.id, nombre: team.nombre, logo: team.logo, pj, pg, pe, pp, pts };
         });
 
-        // Ordenar por puntos desc, luego por PG desc
-        standings.sort((a, b) => {
-            if (b.puntos !== a.puntos) return b.puntos - a.puntos;
-            return b.pg - a.pg;
-        });
+        standings.sort((a, b) => b.pts - a.pts || b.pg - a.pg || a.nombre.localeCompare(b.nombre));
 
         res.json(standings);
     } catch (error) {

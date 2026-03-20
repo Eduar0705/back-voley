@@ -47,4 +47,14 @@ const registrarEquipo = async (req, res) => {
     }
 };
 
-module.exports = { registrarEquipo };
+const getEquipos = async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM equipos ORDER BY nombre ASC');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener los equipos' });
+    }
+};
+
+module.exports = { registrarEquipo, getEquipos };
