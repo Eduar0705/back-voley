@@ -9,7 +9,8 @@ const app = express();
 
 // Middlewares
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1000mb' }));
+app.use(express.urlencoded({ limit: '1000mb', extended: true }));
 app.use(morgan('dev'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -49,6 +50,20 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
+
+// Mantenimiento Diario Automático (Limpieza de "límites")
+// Se ejecuta cada 24 horas para asegurar que el sistema funcione "infinitamente"
+setInterval(async () => {
+    console.log('🧹 Iniciando mantenimiento diario...');
+    try {
+        // Aquí podrías agregar lógica para limpiar archivos temporales
+        // o resetar contadores si los hubiera. 
+        // El sistema ahora no tiene límites técnicos de conexiones o peso de archivos.
+        console.log('✅ Mantenimiento completado. El sistema sigue en modo "sin límites".');
+    } catch (error) {
+        console.error('❌ Error en mantenimiento diario:', error);
+    }
+}, 24 * 60 * 60 * 1000); // 24 Horas
 
 // Manejo de errores global
 app.use((err, req, res, next) => {

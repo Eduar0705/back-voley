@@ -59,14 +59,6 @@ const getJugadoresByEquipo = async (req, res) => {
 const addJugador = async (req, res) => {
     const { nombre, apellido, equipo_id } = req.body;
     try {
-        const [countResult] = await pool.query(
-            'SELECT COUNT(*) as count FROM jugadores WHERE equipo_id = ?',
-            [equipo_id]
-        );
-        if (countResult[0].count >= 10) {
-            return res.status(400).json({ message: 'El equipo ya tiene el máximo de 10 jugadores' });
-        }
-
         const [result] = await pool.query(
             'INSERT INTO jugadores (nombre, apellido, equipo_id) VALUES (?, ?, ?)',
             [nombre, apellido, equipo_id]
@@ -101,14 +93,6 @@ const deleteJugador = async (req, res) => {
             return res.status(404).json({ message: 'Jugador no encontrado' });
         }
         const equipo_id = jugador[0].equipo_id;
-
-        const [countResult] = await pool.query(
-            'SELECT COUNT(*) as count FROM jugadores WHERE equipo_id = ?',
-            [equipo_id]
-        );
-        if (countResult[0].count <= 6) {
-            return res.status(400).json({ message: 'El equipo debe tener al menos 6 jugadores' });
-        }
 
         await pool.query('DELETE FROM jugadores WHERE id = ?', [id]);
         res.json({ success: true, message: 'Jugador eliminado correctamente' });
